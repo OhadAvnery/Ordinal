@@ -7,6 +7,7 @@ def main():
 	b = Ordinal.omega_tower(6)
 	print(w**(b+1))
 	print(b+1>b)
+	print((w+1)*(w+1))
 
 
 if __name__ == '__main__':

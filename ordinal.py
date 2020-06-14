@@ -35,6 +35,9 @@ class Ordinal:
 				return False
 		return True
 
+	def __bool__(self):
+		return bool(self.ord_list)
+
 	def __eq__(self, other):
 		if isinstance(other, int):
 			other = Ordinal(other)
@@ -119,11 +122,64 @@ class Ordinal:
 			other = Ordinal(other)
 		return Ordinal([other])
 
-	def __mul__(self, other):
-		if not isinstance(other, int):
-			raise NotImplementedError
-		return Ordinal(self.ord_list * other)
+	def __mul_int(self, n):
+		'''
+		returns self*n, when n is an int.
+		'''
+		result_list = []
+		for a in self.ord_list:
+			result_list += [a]*n
+		return Ordinal(result_list)
 
+	def __rmul_int(self, n):
+		'''
+		returns n*self, when n is an int.
+		'''
+		# TODO: complete this function 
+		pass
+
+
+
+
+	def __mul__(self, other):
+		'''
+		We use the fact that ordinal multiplication is left-distributive
+		(however, not necessarily right-distributive).
+		'''
+		if isinstance(other, int):
+			return __mul_int(self, other)
+
+		if not (self and other):  # if one of them is 0
+			return Ordinal.ZERO
+
+		a = self.ord_list[0]
+		# N: the number of times w**a appears in self
+		# NOTE TO SELF: this could be improved- we don't have to look
+		# in all of the list, just up to the point where x<a!
+		N = sum([x==a for x in self.ord_list])
+
+		# val: the value of (w**a)*other
+		val = Ordinal([a+b for b in other.ord_list])
+
+		# TODO: fix this!
+		# we need to calculate (w**a)*(N*other),
+		# not (w**a)*other*N!
+		return val * N
+
+		'''temp_result = Ordinal.ZERO
+		for b in other.ord_list:
+			temp_result += (self * Ordinal([b]))
+		return temp_result'''
+
+
+		'''if not isinstance(other, int):
+			raise NotImplementedError
+		return Ordinal(self.ord_list * other)'''
+
+	def __rmul__(self, other):
+		if isinstance(other, int):
+			other = Ordinal(other)
+		return other * self
 
 	'''def succ(self):
 		l = self.ord_list[:]
