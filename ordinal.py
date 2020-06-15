@@ -1,6 +1,9 @@
 #import copy
 from enum import Enum, auto
 import itertools
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 class OrdinalType(Enum):
 	ZERO = auto()
@@ -30,7 +33,9 @@ class Ordinal:
 
 	@staticmethod
 	def valid_list(ord_list):
+		logging.debug(f'valid_list - our list: {ord_list}')
 		for j in range(len(ord_list) - 1):
+			logging.debug(f'valid_list - element #{j}: {ord_list[j]}')
 			if ord_list[j] < ord_list[j + 1]:
 				return False
 		return True
@@ -64,17 +69,46 @@ class Ordinal:
 	def __lt__(self, other):
 		return self <= other and self != other
 
+	def __gt__(self, other):
+		if isinstance(other, int):
+			other = Ordinal(other)
+		return other.__lt__(self)
+
 	def __repr__(self):
 		#return str(self.ord_list)
-		return str(self)
+		return f'{self.ord_type}: {self}'
 
-	def __str__(self):
-		if self == Ordinal.ZERO:
-			return '0'
-		if self == Ordinal.ONE:
-			return '1'
-		if self == Ordinal.OMEGA:
-			return 'w'
+	def __repetition_list(self):
+		'''
+		Given an ordinal, returns its list of ordinals as a list of tuples
+		that indicate how much each exponent repeats.
+		For an example, w+w+w+1 turns to [(1:3),(0:1)].
+		NOTE: we may assume that self!=0.
+		'''
+		# we append None to make the handling of the last ordinal easier
+		l = self.ord_list + [None]
+		lst = []
+		current_ord = self.ord_list[0]
+		N = 0 # num. of repetitions for current ord
+		for a in l:
+			if a == current_ord:
+				N += 1
+			else:
+				lst.append((current_ord, N))
+				current_ord = a
+				N == 1
+		return lst
+
+	def __is_int(self):
+		return all([x==0 for x in self.ord_list])
+
+	def __str_dup(self):
+		'''
+		returns a string version of the ordinal, 
+		with repetitions.
+		NOTE: currently this doesn't work well, as the recursion runs the 
+		standard (no-repeition) str function.
+		'''
 		if self.ord_type == OrdinalType.SUCCESSOR:
 			return str(self.pred()) + "+1"
 		#return '+'.join([f'w^({a})' for a in self.ord_list])
@@ -87,6 +121,41 @@ class Ordinal:
 			else:
 				powers.append(f'w^({a})')
 		return '+'.join(powers)
+
+	def __str__(self, dup=False):
+		'''
+		dup- should a repetitive w**a be written multiple times,
+		instead of using (w^a)*n?
+		defaults to False
+		'''
+		if self == Ordinal.ZERO:
+			return '0'
+		if self == Ordinal.ONE:
+			return '1'
+		if self == Ordinal.OMEGA:
+			return 'w'
+		if dup:
+			return self.__str_dup()
+		terms = []
+		for a, N in self.__repetition_list():
+			if a == 0:
+				terms.append(f'{N}')
+				break  # the last term
+			elif a == 1:
+				basic_val = 'w'
+			elif len(a.ord_list) == 1 or a.__is_int():
+				basic_val = f'w^{a}'
+			else:
+				basic_val = f'w^({a})'
+			if N > 1:
+				terms.append(f'{basic_val}*{N}')
+			else:  # N == 1
+				terms.append(f'{basic_val}')
+		return '+'.join(terms)
+
+		
+
+
 
 	def copy(self):
 		return Ordinal(self.ord_list)
@@ -122,23 +191,24 @@ class Ordinal:
 			other = Ordinal(other)
 		return Ordinal([other])
 
-	def __mul_int(self, n):
+	def __mul_int(self, N):
 		'''
-		returns self*n, when n is an int.
+		returns self*N, where N>=0 is an int
 		'''
-		result_list = []
-		for a in self.ord_list:
-			result_list += [a]*n
-		return Ordinal(result_list)
+		if not (self and N):  # if one of them is 0
+			return Ordinal.ZERO
 
-	def __rmul_int(self, n):
-		'''
-		returns n*self, when n is an int.
-		'''
-		# TODO: complete this function 
-		pass
-
-
+		a = self.ord_list[0]
+		m = 0  # the multiplicity of w**a in self
+		for x in self.ord_list:
+			if x == a:
+				m += 1
+			else:
+				break
+		l = [a]*(m*(N-1)) + self.ord_list
+		logging.debug(f"mul_int- inputs: self={self}, N={N}")
+		logging.debug(f"mul_int - result: {Ordinal(l)}")
+		return Ordinal(l)
 
 
 	def __mul__(self, other):
@@ -147,24 +217,31 @@ class Ordinal:
 		(however, not necessarily right-distributive).
 		'''
 		if isinstance(other, int):
-			return __mul_int(self, other)
+			return self.__mul_int(other)
+			#other = Ordinal(other)
 
 		if not (self and other):  # if one of them is 0
 			return Ordinal.ZERO
 
 		a = self.ord_list[0]
-		# N: the number of times w**a appears in self
-		# NOTE TO SELF: this could be improved- we don't have to look
-		# in all of the list, just up to the point where x<a!
-		N = sum([x==a for x in self.ord_list])
+		N = 0  # the multiplicity of w**0==1 in other
+		for x in reversed(other.ord_list):
+			if x == 0:
+				N += 1
+			else:
+				break
 
-		# val: the value of (w**a)*other
-		val = Ordinal([a+b for b in other.ord_list])
+		result_list = []
+		for b in other.ord_list:
+			if b > 0:
+				# a funny error that happened- 
+				# one should append a+b, not [a+b] :(
+				result_list.append(a+b)
+			else: # b == 0 
+				break
+		logging.debug(f"__mul__ - result list: {result_list}")
+		return Ordinal(result_list) + (self*N)
 
-		# TODO: fix this!
-		# we need to calculate (w**a)*(N*other),
-		# not (w**a)*other*N!
-		return val * N
 
 		'''temp_result = Ordinal.ZERO
 		for b in other.ord_list:
