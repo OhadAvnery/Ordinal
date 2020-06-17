@@ -3,7 +3,7 @@ from enum import Enum, auto
 import itertools
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 class OrdinalType(Enum):
 	ZERO = auto()
@@ -33,9 +33,9 @@ class Ordinal:
 
 	@staticmethod
 	def valid_list(ord_list):
-		logging.debug(f'valid_list - our list: {ord_list}')
+		#logging.debug(f'valid_list - our list: {ord_list}')
 		for j in range(len(ord_list) - 1):
-			logging.debug(f'valid_list - element #{j}: {ord_list[j]}')
+			#logging.debug(f'valid_list - element #{j}: {ord_list[j]}')
 			if ord_list[j] < ord_list[j + 1]:
 				return False
 		return True
@@ -86,6 +86,7 @@ class Ordinal:
 		NOTE: we may assume that self!=0.
 		'''
 		# we append None to make the handling of the last ordinal easier
+		logging.debug(f"repetition_list- input: {self.ord_list}")
 		l = self.ord_list + [None]
 		lst = []
 		current_ord = self.ord_list[0]
@@ -94,9 +95,11 @@ class Ordinal:
 			if a == current_ord:
 				N += 1
 			else:
+				logging.debug(f"repetition_list- appending: {(current_ord, N)}")
 				lst.append((current_ord, N))
 				current_ord = a
-				N == 1
+				N = 1
+		logging.debug(f"repetition_list- output: {lst}")
 		return lst
 
 	def __is_int(self):
@@ -165,12 +168,14 @@ class Ordinal:
 			other = Ordinal(other)
 
 		if len(other.ord_list) == 1:
+			logging.debug(f"adding {self} to the power {other}")
 			b = other.ord_list[0]
 			N = len(self.ord_list) - 1 #last index in ord_list
 			while N >= 0:
 				if self.ord_list[N] >= b:
 					break
 				N -= 1
+			logging.debug(f"list to return: {self.ord_list[:N+1]}, {b}")
 			return Ordinal(self.ord_list[:N+1] + [b])
 
 		temp_result = self.copy()
@@ -275,6 +280,7 @@ class Ordinal:
 		'''
 		a[n] - the nth element in the fundamental sequence for a
 		'''
+		logging.debug(f"calling getitem on: {self}, {n}")
 		if self.ord_type != OrdinalType.LIMIT:
 			raise Exception("Non-limit ordinals don't have a limit")
 
@@ -282,7 +288,11 @@ class Ordinal:
 		w = Ordinal.OMEGA
 		if len(self.ord_list) > 1:
 			o = Ordinal(self.ord_list[:-1])
+			logging.debug(f"getitem- original ordinal: {self}")
+			#b = (w**a)[n]
+			#logging.debug(f"getitem- parts: {o}, {b}")
 			return o + (w**a)[n]
+			#return o + b
 
 		# else, the list has exactly one element- of the form w**a
 		
