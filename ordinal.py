@@ -1,8 +1,8 @@
-#import copy
 from enum import Enum, auto
 import itertools
 import logging
 
+# uncomment this line if you want to see nasty debug notes
 #logging.basicConfig(level=logging.DEBUG)
 
 class OrdinalType(Enum):
@@ -19,7 +19,7 @@ class Ordinal:
 		if isinstance(ord_list, int):
 			ord_list = [Ordinal.ZERO]*ord_list
 		if not Ordinal.valid_list(ord_list):
-			raise Exception("invalid list for class constructor!")
+			raise Exception("invalid list for class constructor")
 		self.ord_list = ord_list
 		self.ord_type = Ordinal.ord_type(self.ord_list)
 
@@ -54,8 +54,6 @@ class Ordinal:
 		if not isinstance(other, Ordinal):
 			return False
 		l1, l2 = self.ord_list, other.ord_list
-		'''if l1 == Ordinal.ZERO:
-			return l2 != Ordinal.ZERO'''
 		pairs = itertools.zip_longest(l1, l2)
 		for a, b in pairs:
 			if a == None:
@@ -75,7 +73,6 @@ class Ordinal:
 		return other.__lt__(self)
 
 	def __repr__(self):
-		#return str(self.ord_list)
 		return f'{self.ord_type}: {self}'
 
 	def __repetition_list(self):
@@ -107,7 +104,7 @@ class Ordinal:
 
 	def __str_dup(self):
 		'''
-		returns a string version of the ordinal, 
+		return a string version of the ordinal, 
 		with repetitions.
 		NOTE: currently this doesn't work well, as the recursion runs the 
 		standard (no-repeition) str function.
@@ -156,11 +153,10 @@ class Ordinal:
 				terms.append(f'{basic_val}')
 		return '+'.join(terms)
 
-		
-
-
-
 	def copy(self):
+		'''
+		creates a new (flat) copy of the ordinal
+		'''
 		return Ordinal(self.ord_list)
 
 	def __add__(self, other):
@@ -170,7 +166,7 @@ class Ordinal:
 		if len(other.ord_list) == 1:
 			logging.debug(f"adding {self} to the power {other}")
 			b = other.ord_list[0]
-			N = len(self.ord_list) - 1 #last index in ord_list
+			N = len(self.ord_list) - 1  # last index in ord_list
 			while N >= 0:
 				if self.ord_list[N] >= b:
 					break
@@ -182,7 +178,6 @@ class Ordinal:
 		for b in other.ord_list:
 			temp_result += Ordinal([b])
 		return temp_result
-		#return Ordinal(self.ord_list + other.ord_list)
 
 	def __radd__(self, other):
 		if isinstance(other, int):
@@ -218,12 +213,12 @@ class Ordinal:
 
 	def __mul__(self, other):
 		'''
+		Multiply two ordinals.
 		We use the fact that ordinal multiplication is left-distributive
 		(however, not necessarily right-distributive).
 		'''
 		if isinstance(other, int):
 			return self.__mul_int(other)
-			#other = Ordinal(other)
 
 		if not (self and other):  # if one of them is 0
 			return Ordinal.ZERO
@@ -247,32 +242,14 @@ class Ordinal:
 		logging.debug(f"__mul__ - result list: {result_list}")
 		return Ordinal(result_list) + (self*N)
 
-
-		'''temp_result = Ordinal.ZERO
-		for b in other.ord_list:
-			temp_result += (self * Ordinal([b]))
-		return temp_result'''
-
-
-		'''if not isinstance(other, int):
-			raise NotImplementedError
-		return Ordinal(self.ord_list * other)'''
-
 	def __rmul__(self, other):
 		if isinstance(other, int):
 			other = Ordinal(other)
 		return other * self
 
-	'''def succ(self):
-		l = self.ord_list[:]
-		l.append(Ordinal.ZERO)
-		return Ordinal(l)'''
-
 	def pred(self):
 		if self.ord_type != OrdinalType.SUCCESSOR:
 			raise Exception("Non-successor ordinals don't have a predecessor")
-		#l= self.ord_list[:]
-		#del l[-1]
 		return Ordinal(self.ord_list[:-1])
 
 
@@ -292,15 +269,13 @@ class Ordinal:
 			#b = (w**a)[n]
 			#logging.debug(f"getitem- parts: {o}, {b}")
 			return o + (w**a)[n]
-			#return o + b
 
 		# else, the list has exactly one element- of the form w**a
-		
 		if a.ord_type == OrdinalType.SUCCESSOR:
 			# b = a.pred()
 			return (w ** a.pred()) * n
 
-		#else, a is a limit ordinal
+		# else, a is a limit ordinal
 		return w ** a[n]
 
 	@staticmethod

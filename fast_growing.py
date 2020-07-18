@@ -1,7 +1,11 @@
 from ordinal import Ordinal, OrdinalType
 
-#returns a new function, x-->g^n(x)
+
 def compose(g, n):
+	'''
+	given a function g:A-->A and an integer n>=0,
+	return a new function, x-->g^n(x).
+	'''
     if n == 0:
         return lambda x: x
     h = compose(g, n-1)
@@ -28,6 +32,11 @@ def fast_growing(a):
 		return lambda n: fast_growing(a[n])(n)
 
 def ordinal_stack(a, n):
+	'''
+	Prints a list of ordinals, starting from a.
+	Each turn, gets a smaller ordinal, by applying either a.pred() or a[n].
+	Finishes with 0.
+	'''
 	d = {OrdinalType.ZERO: '', OrdinalType.SUCCESSOR: 'successor', 
 		 OrdinalType.LIMIT: 'limit'}
 	while True:

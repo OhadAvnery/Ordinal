@@ -1,4 +1,5 @@
 def main():
+	# run this in your terminal if you want some fun ;)
 	from ordinal import Ordinal
 	from fast_growing import *
 	w = Ordinal.OMEGA
@@ -20,7 +21,7 @@ def main():
 	f2(5)
 	f_omega = fast_growing(w)
 	f_omega(2)
-	f_omega(3) #ctrl+c
+	f_omega(3) 
 
 
 if __name__ == '__main__':
